@@ -31,7 +31,7 @@ module Ohm
   end
 
   def options
-    @options
+    @options ||= []
   end
 
   # Clear the database.
