@@ -241,10 +241,12 @@ module Ohm
       end
 
       def delete(value)
+        value = value.id if model
         db.srem(key, value)
       end
 
       def include?(value)
+        value = value.id if model
         db.sismember(key, value)
       end
 
