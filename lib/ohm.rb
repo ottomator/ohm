@@ -241,10 +241,12 @@ module Ohm
       end
 
       def delete(value)
+        value = value.id if model
         db.srem(key, value)
       end
 
       def include?(value)
+        value = value.id if model
         db.sismember(key, value)
       end
 
@@ -456,6 +458,14 @@ module Ohm
 
     def self.all
       @all ||= Attributes::Index.new(db, key(:all), self)
+    end
+
+    def self.delete_all
+      all ||= Attributes::Index.new(db, key(:all), self)
+      all.each do |item|
+        item.delete
+      end
+      @all = nil
     end
 
     def self.attributes
