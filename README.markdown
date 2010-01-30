@@ -3,6 +3,9 @@ Ohm ॐ
 
 Object-hash mapping library for Redis.
 
+Also, from time to time this library really is a pain in the ass, since it does not check it's data, calls non-existent methods on core classes,
+sets/collections don't behave like any set/collection/list/array you have ever seen. Deleting objects is somewhat dangerous and even though
+ohm produces corrupt data, it never checks for it. We just realized that way too late, so we sticked with that.
 
 Description
 -----------
