@@ -130,6 +130,10 @@ module Ohm
 
       # @return [true, false] Returns whether or not the collection is empty.
       def empty?
+        if size.is_a? Array
+          warn "Ohm screwed up, gonna fix that."
+          self.size = size.size
+        end
         size.zero?
       end
 
