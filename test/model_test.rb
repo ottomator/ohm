@@ -710,4 +710,18 @@ class TestRedis < Test::Unit::TestCase
       assert_equal "Foobar", Baz[baz.id].name
     end
   end
+
+  context "Guarding against reserved words" do
+    Ohm::Model::ReservedWord::CATALOG.each do |name|
+      %w( attribute set list counter ).each do |type|
+        should "raise an error if :#{name} is used for #{type}" do
+          assert_raise Ohm::Model::ReservedWord do
+            Class.new(Ohm::Model) do
+              __send__(type, name)
+            end
+          end
+        end
+      end
+    end
+  end
 end

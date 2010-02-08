@@ -361,6 +361,13 @@ module Ohm
       end
     end
 
+    class ReservedWord < Error
+      CATALOG = %w( id attributes counters collections indices mutex inspect key db incr decr )
+      def self.include?(key)
+        CATALOG.include?(key.to_s)
+      end
+    end
+
     @@attributes = Hash.new { |hash, key| hash[key] = [] }
     @@collections = Hash.new { |hash, key| hash[key] = [] }
     @@counters = Hash.new { |hash, key| hash[key] = [] }
@@ -372,12 +379,18 @@ module Ohm
       @id or raise MissingID
     end
 
+    # Wrap define_method to guard from overwriting important methods
+    def self.define_method_safely(name, &block)
+      raise ReservedWord, ":#{name} is reserved word." if ReservedWord.include?(name)
+      define_method(name, &block)
+    end
+
     # Defines a string attribute for the model. This attribute will be persisted by Redis
     # as a string. Any value stored here will be retrieved in its string representation.
     #
     # @param name [Symbol] Name of the attribute.
     def self.attribute(name)
-      define_method(name) do
+      define_method_safely(name) do
         read_local(name)
       end
 
@@ -393,7 +406,7 @@ module Ohm
     #
     # @param name [Symbol] Name of the counter.
     def self.counter(name)
-      define_method(name) do
+      define_method_safely(name) do
         read_local(name).to_i
       end
 
@@ -439,14 +452,14 @@ module Ohm
     end
 
     def self.attr_list_reader(name, model = nil)
-      define_method(name) do
+      define_method_safely(name) do
         instance_variable_get("@#{name}") ||
           instance_variable_set("@#{name}", Attributes::List.new(db, key(name), model))
       end
     end
 
     def self.attr_set_reader(name, model)
-      define_method(name) do
+      define_method_safely(name) do
         instance_variable_get("@#{name}") ||
           instance_variable_set("@#{name}", Attributes::Set.new(db, key(name), model))
       end
