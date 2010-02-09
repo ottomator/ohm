@@ -294,7 +294,9 @@ module Ohm
         indices = keys(hash).unshift(key).uniq
         target = indices.join(glue)
         db.send(operation, target, *indices)
-        self.class.new(db, target, model)
+        m = self.class.new(db, target, model)
+        db.expire(target, 5)
+        return m
       end
 
       # Transform a hash of attribute/values into an array of keys.
@@ -731,9 +733,16 @@ module Ohm
     end
 
     def delete_from_indices
-      db.smembers(key(:_indices)).each do |index|
+      # jfb: the <class>:<id>:_indicies key was never being deleted,
+      # leading to pathological keyspace growth.
+      ikey = key(:_indices)
+      db.smembers(ikey).each do |index|
         db.srem(index, id)
+        if db.smembers(index).size == 0
+          db.del(index)
+        end
       end
+      db.del(ikey)
     end
 
     def read_local(att)
